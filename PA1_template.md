@@ -1,30 +1,8 @@
 # Reproducible Research: Peer Assessment 1
 
-```r
-# defined functions to help analysis done bellow
-dateToWDay <- function (x){
-    sta <- wday(x)
-    if(sta == 1 || sta == 7)sta <- "weekend"
-    else sta <- "weekday"
-    sta
-}
 
-replaceValue <- function(df_new, df_avg){
-    i <- 1
-    numLine <- dim(df_new)[1] 
-    while(i <= numLine){
-        
-        if(is.na(df_new[i,1])){
-            intervalLine <- df_new[i,"interval"]
-            df_new[i,1] <- (df_avg[df_avg$interval == intervalLine,2])[[1]][[1]]
-        }
-        
-        i <- i+1
-    }
-    
-    df_new
-}
-```
+
+
 
 ## Loading and preprocessing the data
 
@@ -34,29 +12,11 @@ replaceValue <- function(df_new, df_avg){
 ```r
 library(lubridate)
 library(dplyr)
-```
+library(ggplot2)
 
-```
-## 
-## Attaching package: 'dplyr'
-## 
-## The following objects are masked from 'package:lubridate':
-## 
-##     intersect, setdiff, union
-## 
-## The following objects are masked from 'package:stats':
-## 
-##     filter, lag
-## 
-## The following objects are masked from 'package:base':
-## 
-##     intersect, setdiff, setequal, union
-```
-
-```r
 df_steps <- read.csv("activity.csv",na.strings = "NA",stringsAsFactors = FALSE)
 df_steps$date <- ymd(df_steps$date)
-df_steps$dayFactor <- lapply(df_steps$date,FUN = dateToWDay)
+df_steps$dayFactor <- dateToWDay(df_steps)
 ```
 
 <p> The steps required were load libraries *lubridate* and *dplyr*
@@ -67,130 +27,51 @@ analysis.
 ## What is mean total number of steps taken per day?
 
 
-```r
-df_steps_gp <- group_by(df_steps, date)
-df_steps_gp <- summarise(df_steps_gp, total = sum(steps))
-
-meanValue <- mean(df_steps_gp$total,na.rm = TRUE)
-medianValue <- median(df_steps_gp$total,na.rm = TRUE)
-```
 
 <p>Given the data is loaded and transformed as needed to perform calculations, as seens bellow, the mean and median numbers of steps taken per day are:</p>
 
-
-
-```r
-print(paste("Mean Value is",round(x = meanValue,digits = 2),sep = " "))
-```
-
-```
-## [1] "Mean Value is 10766.19"
-```
-
-```r
-print(paste("Median Value is",medianValue,sep = " "))
-```
-
-```
-## [1] "Median Value is 10765"
-```
+- Mean Value is <b>1.076619\times 10^{4} </b>
+- Median Value is <b>10765 </b>
 
 <p>Also, a histogram was created to illustrate the frequency of steps.</p>
 
-
-```r
-hist(df_steps_gp$total,main = "Histogram of Total Steps Per Day",xlab = "Total Steps Per Day")
-```
-
-![](PA1_template_files/figure-html/unnamed-chunk-5-1.png) 
+![](PA1_template_files/figure-html/unnamed-chunk-4-1.png) 
 
 ## What is the average daily activity pattern?
 
 
-```r
-df_steps_gp <- group_by(df_steps, interval)
-df_steps_gp <- summarise(df_steps_gp, total = round(mean(steps,na.rm=TRUE),2))
-```
 
 <p>In an effort to establish a pattern of steps, the time series bellow indicates the average number of steps taken per interval in a day.</p>
 
+![](PA1_template_files/figure-html/unnamed-chunk-6-1.png) 
 
-```r
-plot(df_steps_gp$interval, df_steps_gp$total,type="l", xlab = "Interval", ylab = "Average Number of Steps", main = "Average Number of Steps Per Interval of Day")
-```
-
-![](PA1_template_files/figure-html/unnamed-chunk-7-1.png) 
-
-
-<p>Also, as can be calculated, the interval with the highest average number of steps is:</p>
-
-
-```r
-maxInterval <- (df_steps_gp[order(df_steps_gp$total,decreasing = TRUE),])[[1]][[1]]
-
-print(paste("Interval with the Highest Average Number of Steps:",maxInterval,sep = " "))
-```
-
-```
-## [1] "Interval with the Highest Average Number of Steps: 835"
-```
+<p>Also, as can be calculated, the interval with the highest average number of steps is <b> 835 </b> .</p>
 
 ## Imputing missing values
 
-<p>Unfortunately, this data set contains many missing values. As calculated bellow, the total number of missing values for steps in any interval is:</p>
 
 
-```r
-total_nas <- sum(is.na(df_steps$steps))
-print(paste("Total Number of missing values is:",total_nas,sep = " "))
-```
-
-```
-## [1] "Total Number of missing values is: 2304"
-```
+<p>Unfortunately, this data set contains many missing values. As calculated bellow, the total number of missing values for steps in any interval is<b> 2304 </b>.</p>
 
 <p>Given that number and in order to fullfil all data, those missing values will be <b>replaced</b> by the *average/mean number* of steps of that given interval. The purpose of doing the substitution for such number is to approximate the condition of the unknown event (the *NA* value) to the observed in other days for that interval.</p>
 
 
-```r
-df_steps_gp_interval <- group_by(df_steps, interval)
-df_steps_gp_interval <- summarise(df_steps_gp_interval, avg = round(mean(steps,na.rm = TRUE),0))
-
-df_steps_new <- replaceValue(df_steps,df_steps_gp_interval)
-
-df_steps_new_gp <- group_by(df_steps_new, date)
-df_steps_new_gp <- summarise(df_steps_new_gp, total = sum(steps))
-meanValue <- mean(df_steps_new_gp$total,na.rm = TRUE)
-medianValue <- median(df_steps_new_gp$total,na.rm = TRUE)
-```
 
 <p>With the new set of values updated, we recalculated mean and median values of steps taken per day and ploted a new histogram, seen bellow:</p>
 
+- Mean Value is <b>1.076618\times 10^{4} </b>
+- Median Value is <b>1.076613\times 10^{4} </b>
 
 
-```r
-print(paste("Mean Value is",round(x = meanValue,digits = 2),sep = " "))
-```
-
-```
-## [1] "Mean Value is 10765.64"
-```
-
-```r
-print(paste("Median Value is",medianValue,sep = " "))
-```
-
-```
-## [1] "Median Value is 10762"
-```
-
-
-```r
-hist(df_steps_new_gp$total,main = "New Histogram of Total Steps Per Day",xlab = "Total Steps Per Day")
-```
-
-![](PA1_template_files/figure-html/unnamed-chunk-12-1.png) 
+![](PA1_template_files/figure-html/unnamed-chunk-9-1.png) 
 
 <p>By performing the substitution of *NA* values for the average number of steps per interval calculated initially, as we can observe, both new mean and median values are very close to the ones first computed. Also, both histogram graphics provide a similar behaviour.</p>
 
 ## Are there differences in activity patterns between weekdays and weekends?
+
+<p>Finally, we created a new plot to demonstrate the difference in steps taken per interval.</p>
+
+<p>As shown bellow, the average number of steps is concentrated in early morning hours in weekdays, while, in the weekend, towards mid-day.</p>
+
+![](PA1_template_files/figure-html/unnamed-chunk-10-1.png) 
+
